@@ -1,15 +1,11 @@
 package com.cleanup.todoc.model;
 
-import android.arch.lifecycle.Observer;
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.PrimaryKey;
-import android.support.annotation.ColorInt;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
-import com.cleanup.todoc.database.dao.ProjectDao;
-import com.cleanup.todoc.database.dao.TodocDatabase;
-import com.cleanup.todoc.ui.MainActivity;
+import androidx.lifecycle.Observer;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * <p>Models for project in which tasks are included.</p>
@@ -54,9 +50,7 @@ public class Project {
      *
      * @return the unique identifier of the project
      */
-    public long getId() {
-        return id;
-    }
+    public long getId() { return id; }
 
     /**
      * Returns the name of the project.

@@ -1,27 +1,22 @@
 package com.cleanup.todoc.ui;
 
-import android.arch.lifecycle.ViewModel;
+import android.content.Context;
 import android.content.res.ColorStateList;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.AppCompatImageView;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.AppCompatImageView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.cleanup.todoc.R;
-import com.cleanup.todoc.model.MainViewModel;
 import com.cleanup.todoc.model.Project;
 import com.cleanup.todoc.model.Task;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static com.cleanup.todoc.ui.MainActivity.SortMethod.OLD_FIRST;
-import static com.cleanup.todoc.ui.MainActivity.SortMethod.PROJECT;
-import static com.cleanup.todoc.ui.MainActivity.SortMethod.RECENT_FIRST;
 
 /**
  * <p>Adapter which handles the list of tasks to display in the dedicated RecyclerView.</p>
@@ -30,7 +25,6 @@ import static com.cleanup.todoc.ui.MainActivity.SortMethod.RECENT_FIRST;
  */
 public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHolder> {
 
-    MainViewModel mViewModel;
     private List <Task> tasks = new ArrayList<>();
 
     /**
@@ -44,9 +38,8 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
      *
      * @param tasks the list of tasks the adapter deals with to set
      */
-    TasksAdapter(@NonNull MainViewModel pViewModel, @NonNull final DeleteTaskListener deleteTaskListener) {
-        mViewModel = pViewModel;
-        tasks.addAll(mViewModel.getAllTasks());
+    TasksAdapter(List <Task> allTasks, @NonNull final DeleteTaskListener deleteTaskListener) {
+        tasks.addAll(allTasks);
         this.deleteTaskListener = deleteTaskListener;
     }
 
@@ -55,9 +48,9 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
      *
      * @param tasks the list of tasks the adapter deals with to set
      */
-    void updateTasks(MainActivity.SortMethod sortingTasks) {
+    void updateTasks(MainActivity.SortMethod sortingTasks, List <Task> allTasks) {
         tasks.clear();
-        tasks.addAll(mViewModel.getAllTasks());
+        tasks.addAll(allTasks);
 
         switch (sortingTasks) {
             case ALPHABETICAL:
@@ -70,6 +63,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
                 Collections.sort(tasks, new Task.TaskRecentComparator());
                 break;
             case OLD_FIRST:
+            case NONE:
                 Collections.sort(tasks, new Task.TaskOldComparator());
                 break;
             case PROJECT:
@@ -88,7 +82,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder taskViewHolder, int position) {
-        taskViewHolder.bind(tasks.get(position));
+        taskViewHolder.bind(tasks.get(position), taskViewHolder.itemView.getContext());
     }
 
     @Override
@@ -106,6 +100,10 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
          * @param task the task that needs to be deleted
          */
         void onDeleteTask(Task task);
+    }
+
+    public interface GetProjectListener {
+        void onProjectRetrieved(Project project);
     }
 
     /**
@@ -170,22 +168,30 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
          * Binds a task to the item view.
          *
          * @param task the task to bind in the item view
+         * @param context
          */
-        void bind(Task task) {
+        void bind(Task task, Context context) {
             lblTaskName.setText(task.getName());
             imgDelete.setTag(task);
 
-            // TODO : ça craint ! > done ?
-
-            final Project taskProject = mViewModel.getProject(task.getProjectId());
-            if (taskProject != null) {
-                imgProject.setSupportImageTintList(ColorStateList.valueOf(taskProject.getColor()));
-                lblProjectName.setText(taskProject.getName());
-            } else {
-                imgProject.setVisibility(View.INVISIBLE);
-                lblProjectName.setText("");
-            }
-
+            ((MainActivity)context).getProject(task, new TasksAdapter.GetProjectListener() {
+                @Override
+                public void onProjectRetrieved(Project project) {
+                    ((MainActivity) context).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (project != null) {
+                                imgProject.setSupportImageTintList(ColorStateList.valueOf(project.getColor()));
+                                lblProjectName.setText(project.getName());
+                            } else {
+                                imgProject.setVisibility(View.INVISIBLE);
+                                lblProjectName.setText("");
+                            }
+                        }
+                    });
+                }
+            });
         }
+
     }
 }

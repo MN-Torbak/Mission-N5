@@ -1,9 +1,9 @@
 package com.cleanup.todoc.database.dao;
 
-import android.arch.persistence.room.Dao;
-import android.arch.persistence.room.Insert;
-import android.arch.persistence.room.Query;
-import android.arch.persistence.room.Update;
+import androidx.room.Dao;
+import androidx.room.Insert;
+import androidx.room.Query;
+import androidx.room.Update;
 
 import com.cleanup.todoc.model.Task;
 
@@ -19,7 +19,7 @@ public interface TaskDao {
     List<Task> getAllTasks();
 
     @Insert
-    long insertTask(Task task);
+    void insertTask(Task task);
 
     @Update
     void updateTask(Task task);

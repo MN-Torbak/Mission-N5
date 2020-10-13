@@ -19,7 +19,7 @@ public class TaskDataRepository {
 
     // --- CREATE ---
 
-    public long createTask(Task task){ return taskDao.insertTask(task); }
+    public void createTask(Task task){ taskDao.insertTask(task); }
 
     // --- DELETE ---
     public void deleteTask(long taskId){ taskDao.deleteTask(taskId); }

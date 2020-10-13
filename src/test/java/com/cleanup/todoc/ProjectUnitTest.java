@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 public class ProjectUnitTest {
 
     @Test
-    public void test_get_project_id() {
+    public void test_get_project_from_project_id() {
         final Project project1 = new Project(1L, "Project 1", 1);
         final Project project2 = new Project(2L, "Project 2", 2);
         final Project project3 = new Project(3L, "Project 3", 3);
@@ -17,7 +17,7 @@ public class ProjectUnitTest {
     }
 
     @Test
-    public void test_get_name() {
+    public void test_get_project_from_name() {
         final Project project1 = new Project(1L, "Project 1", 1);
         final Project project2 = new Project(2L, "Project 2", 2);
         final Project project3 = new Project(3L, "Project 3", 3);
@@ -27,7 +27,7 @@ public class ProjectUnitTest {
     }
 
     @Test
-    public void test_get_color() {
+    public void test_get_project_from_color() {
         final Project project1 = new Project(1L, "Project 1", 1);
         final Project project2 = new Project(2L, "Project 2", 2);
         final Project project3 = new Project(3L, "Project 3", 3);

@@ -1,7 +1,6 @@
 package com.cleanup.todoc.model;
 
-import android.arch.lifecycle.ViewModel;
-import android.support.annotation.Nullable;
+import androidx.lifecycle.ViewModel;
 
 import com.cleanup.todoc.repositories.ProjectDataRepository;
 import com.cleanup.todoc.repositories.TaskDataRepository;
@@ -28,19 +27,29 @@ public class MainViewModel extends ViewModel {
     // FOR PROJECT
     // -------------
 
-    public Project getProject(long projectId) { return this.projectDataSource.getProject(projectId);  }
+    public void getProject(long projectId, MainActivity.GetProjectListener getProjectListener) {
+        executor.execute(() -> {
+            Project project = projectDataSource.getProject(projectId);
+            getProjectListener.onProjectRetrieved(project);
+        });
+    }
 
-    public List<Project> getAllProject() { return this.projectDataSource.getAllProjects(); }
+    public void getAllProject(MainActivity.GetAllProjectListener getAllProjectListener) {
+        executor.execute(() -> {
+            getAllProjectListener.onAllProjectRetrieved(projectDataSource.getAllProjects());
+        });
+    }
 
     // -------------
     // FOR TASK
     // -------------
 
-    public List<Task> getTasks(long projectId) {
-        return taskDataSource.getTasks(projectId);
+    public void getAllTasks(MainActivity.GetAllTasksListener getAllTasksListener) {
+        executor.execute(() -> {
+            List<Task> tasks = taskDataSource.getAllTasks();
+            getAllTasksListener.onTasksRetrieved(tasks);
+        });
     }
-
-    public List<Task> getAllTasks() { return taskDataSource.getAllTasks(); }
 
     public void createTask(Task task, MainActivity.UpdateTaskListener updateTaskListener) {
         executor.execute(() -> {
@@ -53,12 +62,6 @@ public class MainViewModel extends ViewModel {
         executor.execute(() -> {
             taskDataSource.deleteTask(projectId);
             updateTaskListener.onUpdateTask();
-        });
-    }
-
-    public void updateTask(Task task) {
-        executor.execute(() -> {
-            taskDataSource.updateTask(task);
         });
     }
 }

@@ -1,9 +1,12 @@
 package com.cleanup.todoc;
 
-import android.arch.core.executor.testing.InstantTaskExecutorRule;
-import android.arch.persistence.room.Room;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
+import android.content.Context;
+
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+import androidx.room.Room;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.cleanup.todoc.database.dao.TodocDatabase;
 import com.cleanup.todoc.model.Project;
@@ -34,7 +37,8 @@ public class DaoTest {
 
     @Before
     public void initDb() throws Exception {
-        this.database = Room.inMemoryDatabaseBuilder(InstrumentationRegistry.getContext(),
+        Context context = ApplicationProvider.getApplicationContext();
+        this.database = Room.inMemoryDatabaseBuilder(context,
                 TodocDatabase.class)
                 .allowMainThreadQueries()
                 .build();
@@ -76,7 +80,8 @@ public class DaoTest {
         this.database.projectDao().createProject(PROJECT_TWO);
         this.database.projectDao().createProject(PROJECT_THREE);
         // TEST
-        assertEquals(this.database.projectDao().getAllProjects().size(), 3);
+        int PROJECT_SIZE = 3;
+        assertEquals(this.database.projectDao().getAllProjects().size(), PROJECT_SIZE);
     }
 
     @Test
@@ -93,7 +98,8 @@ public class DaoTest {
         this.database.taskDao().insertTask(TASK_SIX);
         // TEST
         List<Task> tasks = this.database.taskDao().getAllTasks();
-        assertEquals(tasks.size(), 6);
+        int TASK_SIZE_SIX = 6;
+        assertEquals(tasks.size(), TASK_SIZE_SIX);
     }
 
     @Test
@@ -103,7 +109,8 @@ public class DaoTest {
         this.database.taskDao().insertTask(TASK_ONE);
         // TEST
         List<Task> tasks = this.database.taskDao().getTasks(PROJECT_ID_1);
-        assertEquals(tasks.size(), 1);
+        int TASK_SIZE_ONE = 1;
+        assertEquals(tasks.size(), TASK_SIZE_ONE);
     }
 
     @Test
@@ -116,7 +123,8 @@ public class DaoTest {
         this.database.taskDao().deleteTask(TASK_TWO.getId());
         // TEST
         List<Task> tasks = this.database.taskDao().getTasks(PROJECT_ID_1);
-        Assert.assertEquals(tasks.size(), 2);
+        int TASK_SIZE_TWO = 2;
+        Assert.assertEquals(tasks.size(), TASK_SIZE_TWO);
         Assert.assertTrue(tasks.contains(TASK_ONE));
         Assert.assertTrue(tasks.contains(TASK_THREE));
         Assert.assertFalse(tasks.contains(TASK_TWO));

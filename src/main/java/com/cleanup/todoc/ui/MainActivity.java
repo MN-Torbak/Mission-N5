@@ -1,14 +1,14 @@
 package com.cleanup.todoc.ui;
 
-import android.arch.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,7 +19,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.cleanup.todoc.R;
-import com.cleanup.todoc.database.dao.TodocDatabase;
 import com.cleanup.todoc.injections.Injection;
 import com.cleanup.todoc.injections.ViewModelFactory;
 import com.cleanup.todoc.model.Project;
@@ -27,7 +26,6 @@ import com.cleanup.todoc.model.Task;
 import com.cleanup.todoc.model.MainViewModel;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -81,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
         lblNoTasks = findViewById(R.id.lbl_no_task);
 
         this.configureViewModel();
-        adapter = new TasksAdapter(mMainViewModel, this);
+        adapter = new TasksAdapter(new ArrayList<>(), this);
 
         listTasks.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         listTasks.setAdapter(adapter);
@@ -214,15 +212,24 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                List <Task> dbTask = MainActivity.this.mMainViewModel.getAllTasks();
-                if (dbTask.size() == 0) {
-                    lblNoTasks.setVisibility(View.VISIBLE);
-                    listTasks.setVisibility(View.GONE);
-                } else {
-                    lblNoTasks.setVisibility(View.GONE);
-                    listTasks.setVisibility(View.VISIBLE);
-                    adapter.updateTasks(sortMethod);
-                }
+                MainActivity.this.mMainViewModel.getAllTasks(new GetAllTasksListener() {
+                    @Override
+                    public void onTasksRetrieved(List<Task> allTasks) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (allTasks.size() == 0) {
+                                    lblNoTasks.setVisibility(View.VISIBLE);
+                                    listTasks.setVisibility(View.GONE);
+                                } else {
+                                    lblNoTasks.setVisibility(View.GONE);
+                                    listTasks.setVisibility(View.VISIBLE);
+                                    adapter.updateTasks(sortMethod, allTasks);
+                                }
+                            }
+                        });
+                    }
+                });
             }
         });
     }
@@ -269,16 +276,20 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
 
         return dialog;
     }
-
     /**
      * Sets the data of the Spinner with projects to associate to a new task
      */
     private void populateDialogSpinner() {
-        final ArrayAdapter<Project> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, mMainViewModel.getAllProject());
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        if (dialogSpinner != null) {
-            dialogSpinner.setAdapter(adapter);
-        }
+        mMainViewModel.getAllProject(new GetAllProjectListener() {
+            @Override
+            public void onAllProjectRetrieved(List<Project> allProject) {
+                final ArrayAdapter<Project> adapter = new ArrayAdapter<Project>(MainActivity.this, android.R.layout.simple_spinner_item, allProject);
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                if (dialogSpinner != null) {
+                    dialogSpinner.setAdapter(adapter);
+                }
+            }
+        } );
     }
 
     /**
@@ -316,19 +327,42 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
         this.mMainViewModel = ViewModelProviders.of(this, mViewModelFactory).get(MainViewModel.class);
     }
 
+    public void getProject(Task task, TasksAdapter.GetProjectListener getProjectListener) {
+        mMainViewModel.getProject(task.getProjectId(), new GetProjectListener() {
+            @Override
+            public void onProjectRetrieved(Project project) {
+                getProjectListener.onProjectRetrieved(project);
+            }
+        });
+    }
+
     public interface UpdateTaskListener {
         void onUpdateTask();
     }
+    public interface GetAllTasksListener {
+        void onTasksRetrieved(List <Task> allTasks);
+    }
+    public interface GetProjectListener {
+        void onProjectRetrieved(Project project);
+    }
+    public interface GetAllProjectListener {
+        void onAllProjectRetrieved (List <Project> allProject);
+    }
+
     public void cleanTasksFromDb() {
-        List<Task> tasksToDelete  = this.mMainViewModel.getAllTasks();
-        for (Task task: tasksToDelete) {
-            this.mMainViewModel.deleteTask(task.getId(), new UpdateTaskListener() {
-                @Override
-                public void onUpdateTask() {
-                    updateTasks();
+        this.mMainViewModel.getAllTasks(new GetAllTasksListener() {
+            @Override
+            public void onTasksRetrieved(List<Task> allTasks) {
+                for (Task task: allTasks) {
+                    mMainViewModel.deleteTask(task.getId(), new UpdateTaskListener() {
+                        @Override
+                        public void onUpdateTask() {
+                            updateTasks();
+                        }
+                    });
                 }
-            });
-        }
+            }
+        });
     }
 
 }
